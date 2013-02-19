@@ -1,0 +1,148 @@
+/*@import url("http://fast.fonts.com/t/1.css?apiType=css&projectid=75ddf206-d28f-4d92-a3f7-6b483abea427");*/
+@font-face{
+font-family:"Calibri W01 Regular";
+src:url("../calibri/d4acc8cd-67f2-4139-80be-d669bb2564d7.eot?iefix") format("eot");}
+@font-face{
+font-family:"Calibri W01 Regular";
+src:url("../calibri/d4acc8cd-67f2-4139-80be-d669bb2564d7.eot?iefix");
+src:url("../calibri/1ff86dd4-d3b2-4325-89bc-c6eb493cedba.woff") format("woff"),url("../calibri/aa6b4b64-5ce0-48fd-887a-bece037cd9c9.ttf") format("truetype"),url("../calibri/59b6060c-d311-413e-b351-d79aaf982f7a.svg#59b6060c-d311-413e-b351-d79aaf982f7a") format("svg");
+}
+@font-face{
+font-family:"Calibri W01 Bold";
+src:url("../calibri/26989e0d-2435-46c9-ab53-ae63e1816b99.eot?iefix") format("eot");}
+@font-face{
+font-family:"Calibri W01 Bold";
+src:url("../calibri/26989e0d-2435-46c9-ab53-ae63e1816b99.eot?iefix");
+src:url("../calibri/4e7b2126-77d3-4e53-810d-7ccfde46450a.woff") format("woff"),url("../calibri/dcb27c78-fcd6-43bb-ab8b-9152bcfeb336.ttf") format("truetype"),url("../calibri/ab531dcb-6916-45d8-9326-ab3e33d75ef3.svg#ab531dcb-6916-45d8-9326-ab3e33d75ef3") format("svg");
+}
+@font-face{
+font-family:"Calibri W01 Bold Italic";
+src:url("../calibri/c0f723f3-c373-4abc-9043-0fb0b460b8dc.eot?iefix") format("eot");}
+@font-face{
+font-family:"Calibri W01 Bold Italic";
+src:url("../calibri/c0f723f3-c373-4abc-9043-0fb0b460b8dc.eot?iefix");
+src:url("../calibri/e43fbe67-bdec-48c3-b305-e4f021d8e755.woff") format("woff"),url("../calibri/7cf1f907-81f8-4b27-8ae5-986118860da1.ttf") format("truetype"),url("../calibri/d5b3dbd1-291d-4354-bdcd-216ef956c562.svg#d5b3dbd1-291d-4354-bdcd-216ef956c562") format("svg");
+}
+@font-face{
+font-family:"Calibri W01 Italic";
+src:url("../calibri/f5fb4de8-efeb-47a8-94a7-50b825a6966a.eot?iefix") format("eot");}
+@font-face{
+font-family:"Calibri W01 Italic";
+src:url("../calibri/f5fb4de8-efeb-47a8-94a7-50b825a6966a.eot?iefix");
+src:url("../calibri/cac25ebb-269d-41e9-8ee5-78589746706e.woff") format("woff"),url("../calibri/6a4b5dab-ebbd-4741-80c7-3b30cd46e05d.ttf") format("truetype"),url("../calibri/318af76f-0012-4791-a785-d241f2613955.svg#318af76f-0012-4791-a785-d241f2613955") format("svg");
+}
+
+
+/*style the main menu*/
+.myMenu {
+	margin:0;
+	padding:0;
+}
+
+.myMenu li, .myMenu li:visited {
+    background:#fff;
+    display:block;
+    float:left;
+    margin-right:2px;
+    position: relative;
+    border:1px solid #e8e6e3;
+    border-bottom: none;
+    border-top-left-radius:5px;
+    -moz-border-radius-topleft:5px;
+    -webkit-border-top-left-radius:5px;
+    border-top-right-radius:5px;
+    -moz-border-radius-topright:5px;
+    -webkit-border-top-right-radius:5px;
+}
+
+.myMenu li a:link, .myMenu li a:visited {
+    display: block;
+    height: 26px;
+    line-height:26px;
+    float: left; /* IE 6 Fix */
+    padding: 0 18px;
+/*    background: url(../images/menutab_left.png) left top no-repeat;*/
+    font-family: "ArvoRegular", Times New Roman, Times, serif;
+    text-decoration:none;
+    text-align:center;
+    font-size:14px;
+    color:#666666;
+}
+
+.nav ul.myMenu li:hover, .nav ul.myMenu li.active {
+/*    background:url(../images/menutab_right_visited.png) no-repeat right top;*/
+    background:#fbfaf7;
+}
+.nav ul.myMenu li:hover a:hover, .nav ul.myMenu li.active a {
+/*    background: url(../images/menutab_left_visited.png) left top no-repeat;*/
+    color:#69d1e5;
+    position:relative;
+    cursor:pointer;
+}
+.nav ul.myMenu li:active {
+    background:url(../images/menutab_right_visited.png) no-repeat right top;
+}
+.nav ul.myMenu li:active a {
+    background: url(../images/menutab_left_visited.png) left top no-repeat;
+}
+/*style the sub menu*/
+.nav ul.myMenu li ul.mySubMenu {
+    position:absolute;
+    visibility:hidden;
+    top: 26px;
+    left: -1px;
+    margin:0;
+    padding:0;
+    border: 1px solid #dddcda;
+    background: #fff;
+    line-height:18px;
+    z-index:1000;
+    width: 100px;
+    border-radius:5px;
+    -moz-border-radius:5px;
+    -webkit-border-radius:5px;
+    border-top-left-radius:0;
+    -moz-border-radius-topleft:0;
+    -webkit-border-top-left-radius:0;
+}
+
+ul.myMenu li ul.mySubMenu li {
+    display:block;
+    float:left;
+    width:100%;
+    height: 26px;
+    clear:left;
+    border: none;
+    border-bottom: 1px solid #dddcda;
+    background: none;
+}
+ul.myMenu li ul.mySubMenu li:last-child {
+    border-bottom: none;
+    border-bottom-left-radius:5px;
+    -moz-border-radius-bottomleft:5px;
+    -webkit-border-bottom-left-radius:5px;
+    border-bottom-right-radius:5px;
+    -moz-border-radius-bottomright:5px;
+    -webkit-border-bottom-right-radius:5px;
+}
+ul.myMenu li ul.mySubMenu li a:link, ul.myMenu li ul.mySubMenu li a:visited {
+    width: 100%;
+    background: none;
+    display: block;
+    text-indent: 5px;
+    font-size:12px;
+    font-family:"Calibri W01 Regular";
+    padding: 0;
+    text-decoration: none;
+    color:#666666;
+    text-align: left;
+}
+ul.myMenu li ul.mySubMenu li:last-child {
+    
+}
+ul.myMenu li ul.mySubMenu li:hover {
+    background: #fbfaf7 !important;
+}
+ul.myMenu li ul.mySubMenu li a:hover {
+    color:#69d1e5;
+}

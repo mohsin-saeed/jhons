@@ -1,0 +1,46 @@
+#overall-container {
+    width:100%;
+    height:auto;
+    position:absolute;
+    text-align:center;
+    z-index: 1200;
+}
+.opacity {
+    /*background:url(../images/fancy-box-bg.png) repeat left top;*/
+    position: absolute;
+    width: 100%;
+    z-index:1100;
+    display:none;
+    left: 0;
+    background-color:#000;
+    opacity:0.45;
+    filter: alpha(opacity=50);
+    -khtml-opacity: .75;
+}
+#block-carousel_d-0 .carousel-images a {
+    display:none;
+}
+.crossme {
+    cursor:pointer;
+    top:-10px;
+    position:absolute;
+    left:795px;
+}
+body {
+    background-attachment: fixed;
+}
+#basic-modal-content1 {
+    visibility:hidden;
+    padding:20px;
+    left:10%;
+    border:2px solid #666;
+    position:absolute;
+    width:770px;
+    /*height: 720px;*/
+    height: auto;
+    z-index:99;
+    margin:auto;
+    top: -130px;
+    background: #ffffff;
+    z-index:1200;
+}

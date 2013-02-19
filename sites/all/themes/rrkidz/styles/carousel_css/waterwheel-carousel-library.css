@@ -1,0 +1,77 @@
+/*body {
+  font-family:Arial;
+  font-size:12px;
+}*/
+div.example-desc {
+  margin:3px 0;
+  padding:5px;
+  background-color:#EFEFEF;
+}
+
+/********************
+Default Example
+*********************/
+#waterwheel-carousel-default {
+  width:960px;
+  background-color:#CCC;
+  border:1px solid #222;
+  height:250px;
+  font-family: Arial;
+  font-size:14px;
+  position:relative;
+  clear:both;
+}
+#waterwheel-carousel-default a {
+  color:#222;
+}
+#waterwheel-carousel-default .carousel-images img {
+  visibility:hidden;
+  /*cursor:pointer;*/
+}
+#waterwheel-carousel-default .carousel-controls .carousel-prev {
+  position:absolute;
+  bottom:30px;
+  left:30px;
+}
+#waterwheel-carousel-default .carousel-controls .carousel-next {
+  position:absolute;
+  bottom:30px;
+  right:30px;
+}
+
+/********************
+High Arch
+*********************/
+#waterwheel-carousel-higharch {
+  background-color:#fff;
+/*  background-color:#e6e6e6;
+  border:1px solid #ccc;
+  height:300px;*/
+  height:380px;
+  font-family: Arial;
+  font-size:14px;
+  position:relative;
+  clear:both;
+  overflow:hidden;  
+}
+#waterwheel-carousel-higharch a {
+  color:#222;
+}
+#waterwheel-carousel-higharch .carousel-images img {
+  visibility:hidden;
+  /*cursor:pointer;*/
+}
+#waterwheel-carousel-higharch .carousel-controls .carousel-prev {
+  position:absolute;
+  bottom:120px;
+  left:120px;
+  height:31px;
+  z-index: 1000;
+}
+#waterwheel-carousel-higharch .carousel-controls .carousel-next {
+  position:absolute;
+  bottom:120px;
+  right:118px;
+  height:31px;
+  z-index: 2000;
+}

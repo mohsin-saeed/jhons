@@ -1,0 +1,87 @@
+/*body {
+  font-family:Arial;
+  font-size:12px;
+}*/
+div.example-desc {
+  margin:3px 0;
+  padding:5px;
+  background-color:#EFEFEF;
+}
+
+/********************
+Default Example
+*********************/
+#waterwheel-carousel-default {
+  width:960px;
+  background-color:#CCC;
+  border:1px solid #222;
+  height:250px;
+  font-family: Arial;
+  font-size:14px;
+  position:relative;
+  clear:both;
+}
+#waterwheel-carousel-default a {
+  color:#222;
+}
+#waterwheel-carousel-default .carousel-images img {
+  visibility:hidden;
+  cursor:pointer;
+}
+#waterwheel-carousel-default .carousel-controls .carousel-prev {
+  position:absolute;
+  bottom:30px;
+  left:30px;
+}
+#waterwheel-carousel-default .carousel-controls .carousel-next {
+  position:absolute;
+  bottom:30px;
+  right:30px;
+}
+
+/********************
+High Arch
+*********************/
+#waterwheel-carousel-higharch {
+  /*background-color:#CCC;
+  height:300px;
+  border:1px solid #ff0000;*/
+  height:200px;
+  font-family: Arial;
+  font-size:14px;
+  position:relative;
+  clear:both;
+  overflow:hidden;
+}
+.carousel-controls {
+    margin: 0 auto;
+    position: relative;
+    width:600px;
+    z-index: 2000;
+}
+#waterwheel-carousel-higharch a {
+  color:#222;
+}
+#waterwheel-carousel-higharch .carousel-images img {
+  visibility:hidden;
+  cursor:pointer;
+}
+#waterwheel-carousel-higharch .carousel-controls .carousel-prev {
+  position:absolute;
+  top:120px;
+  left:90px;
+  height:31px;
+  z-index: 2000;
+}
+#waterwheel-carousel-higharch .carousel-controls .carousel-next {
+  position:absolute;
+  top:120px;
+  right:35px;
+  height:31px;
+  z-index: 2000;
+}
+
+.carousel-images {
+    margin-top:-50px;
+    z-index: 1500;
+}

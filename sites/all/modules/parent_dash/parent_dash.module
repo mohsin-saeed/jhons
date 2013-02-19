@@ -1,0 +1,632 @@
+<?php
+
+function parent_dash_menu(){
+  $items['child/history'] = array(
+      'page callback' => 'get_child_history',
+      'access arguments' => array('access content')
+  );
+
+  $items['child/history/table'] = array(
+      'page callback' => 'get_child_history_table',
+      'access arguments' => array('access content')
+  );
+
+  $items['parents/child_data'] = array(
+      'page callback' => 'get_child_data',
+      'access arguments' => array('access content')
+  );
+
+  $items['parents/child'] = array(
+      'page callback' => 'get_child_data',
+      'access arguments' => array('access content')
+  );
+  return $items;
+}
+
+function parent_dash_block($op='list', $delta=0) {
+
+  if ($op == "list") {
+	$block[0]["info"] = t('Parent Dashboard');
+	return $block;
+  }
+  else if ($op == 'view') {
+	$block_content = parent_dash_content();
+	$block['content'] = '<div id="parents-child-page">'.$block_content."</div>";
+	return $block;
+  }
+}
+
+function parent_dash_content(){
+
+//$_SESSION['children_list'] = json_decode('{
+//        "children": [
+//            {
+//                "childAge": 5,
+//                "childId": 201,
+//                "childName": "Abc",
+//                "gender": null,
+//                "interest1": "pirates",
+//                "interest2": "space",
+//                "interest3": "ocean"
+//            },
+//            {
+//                "childAge": 6,
+//                "childId": 217,
+//                "childName": "Xyz",
+//                "gender": null,
+//                "interest1": "ocean",
+//                "interest2": "space"
+//            }
+//        ]
+//}' ,true);
+
+//  echo "<pre>";
+//  print_r( $_SESSION['children_list'] );
+//  ////$_SESSION['children_list'] = json_decode($_SESSION['children_list'], true);
+//  echo "</pre>";
+
+  return _getBlockContents();
+}
+
+
+function _get_history(){
+   $selectedChildArrIndex = 1;
+   $selectedChild ;
+   if(!empty($_GET["child"])){
+       $selectedChildArrIndex = $_GET["child"];
+       $selectedChild = $_SESSION['children_list']["children"][($selectedChildArrIndex-1)]["childId"];
+
+   }else{
+       $selectedChildArrIndex = 1;
+       $selectedChild = $_SESSION['children_list']["children"][($selectedChildArrIndex-1)]["childId"];
+       
+   }
+
+   $temp_arr = array();
+   
+   if(empty($_SESSION['children_history_dashboard'][$selectedChild])){
+
+/* ------------------------------Changes fot incorporating web service single child(assumption conflict :( )----------------------------------  */
+
+       $url = 'http://int.rrkidz.com/rrkidz/api/child/'.$selectedChild.'/readingHistory';
+
+       $ch = curl_init();
+       $timeout = 0; // set to zero for no timeout
+       curl_setopt ($ch, CURLOPT_URL, $url);
+       curl_setopt($ch,CURLOPT_HTTPHEADER,array('Accept: application/json'));
+       curl_setopt($ch,CURLOPT_USERPWD,"rrkidz_server:ha9uTheyusu3");
+       curl_setopt ($ch, CURLOPT_RETURNTRANSFER, 1);
+       curl_setopt ($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
+       $file_contents = curl_exec($ch);
+       curl_close($ch);
+       $temp_arr_1 = json_decode($file_contents,true);
+
+//       echo "<pre>2222";
+//       print_r($temp_arr_1);
+//       die();
+       $temp_arr["name"] = $_SESSION['children_list']["children"][($selectedChildArrIndex-1)]["childName"];
+       $temp_arr["activities"] = $temp_arr_1["activities"];
+
+       $childrenIDArr = array();
+       foreach($_SESSION['children_list']["children"] as $ind=>$val){
+            $childrenIDArr[$ind] = $val["childId"];
+       }
+       $temp_arr["all_children_ids"] =  $childrenIDArr;
+
+       $_SESSION['children_history_dashboard'][$selectedChild] = $temp_arr;
+
+       $temp_arr["current_child_id"] =  $selectedChild;
+       $temp_arr["current_child_index"] =  $selectedChildArrIndex;
+       //print_r($temp_arr);die("0000");
+
+/* ----------------------------------------------------------------  */
+
+   }else{
+       $temp_arr = $_SESSION['children_history_dashboard'][$selectedChild];
+       $temp_arr["current_child_id"] =  $selectedChild;
+       $temp_arr["current_child_index"] =  $selectedChildArrIndex;
+   }
+
+//   echo "<pre>";
+//   print_r($temp_arr);
+//   echo "</pre>";
+
+   return $temp_arr;
+}
+
+function _getBlockContents(){
+       global $base_url;
+  $content = '';
+  $_SESSION['user_id'] = 11;
+  if ($_SESSION['user_id'] == '')
+  {
+       header('location:'.$base_url);
+	return;
+  }
+
+   //drupal_add_js('sites/all/themes/rrkidz/js/carousel_js/jquery-1.6.1.min.js', 'theme');
+   //drupal_add_css('sites/all/themes/rrkidz/styles/carousel_css/waterwheel-carousel-dashboard.css', 'theme');
+   //drupal_add_js('sites/all/themes/rrkidz/js/carousel_js/jquery.waterwheelCarousel.js', 'theme');
+   //drupal_add_js('sites/all/themes/rrkidz/js/carousel_js/carousel.js', 'theme');
+
+
+
+
+  drupal_add_css('sites/all/themes/rrkidz/styles/info_parent_dash_call.css', 'theme');
+  drupal_add_js('sites/all/themes/rrkidz/js/info_parent_dash_call.js', 'theme');
+  //drupal_add_js('sites/all/modules/parent_dash/parent_dashboard.js');
+
+   
+   $temp_arr = _get_history();
+ 
+   $child_name = $temp_arr["name"];
+   $video_trips_count = count($temp_arr["video_field_trips"]);
+
+
+   /*****-----------Next and Previous Chlid Links Generation-------------*****/
+   $current_child_index = $temp_arr["current_child_index"];
+   $nextChildIndex = $temp_arr["current_child_index"] +1;
+   $prevChildIndex = $temp_arr["current_child_index"] -1;
+
+   
+   $prevChildLink = '<span style="display:none" id="prevChildIndex">'.$prevChildIndex.'</span><a href="javascript:;" onClick="loadPrevChildData()" class="prev_child_arrow"> << </a>';
+   $nextChildLink = '<span style="display:none" id="nextChildIndex">'.$nextChildIndex.'</span><a href="javascript:;" onClick="loadNextChildData()" class="prev_child_arrow"> >> </a>';
+
+   if($nextChildIndex > count($temp_arr["all_children_ids"])){
+       $nextChildLink = "";
+   }
+
+   if($prevChildIndex < 1 || empty ($prevChildIndex)){
+        $prevChildLink = "";
+   }
+
+   /*****-----------End of Next and Previous Chlid Links Generation-------------*****/
+
+   $current_child_id = $temp_arr["current_child_id"];
+
+   $index = 0;
+
+   $books_read_year = 0;
+   $books_read_month = 0;
+   $books_read_week = 0;
+
+   $minutes_read_year = 0;
+   $minutes_read_month = 0;
+   $minutes_read_week = 0;
+
+   $curr_year = date('Y');;
+   $curr_month = date('m');
+   $curr_day = date('d');
+
+
+   if (!empty($temp_arr['activities']))
+   {
+       foreach ($temp_arr['activities'] as $activity => $value)
+       {
+               $data_array[$index]['bookID'] = $value['book_id'];
+               $index++;
+
+               $act_date = $value['activity_date'];
+               $year = substr($act_date, 0, 4);
+               $month = substr($act_date, 5, -3);
+               $day = substr($act_date, 8);
+
+               if ($curr_year == $year)
+               {
+                   $books_read_year++;
+                   $minutes_read_year = $minutes_read_year + ceil($value['time_read']/60);
+               }
+
+               if (($curr_month == $month)&&(($curr_year == $year)))
+               {
+                   $books_read_month++;
+                   $minutes_read_month = $minutes_read_month + ceil($value['time_read']/60);
+               }
+
+               if (($day <= $curr_day)&&($day >= $curr_day-7)&&($curr_month == $month)&&($curr_year == $year))
+               {
+                   $books_read_week++;
+                   $minutes_read_week = $minutes_read_week + ceil($value['time_read']/60);
+               }
+
+       }
+       /*convert seconds to minutes*/
+//       $minutes_read_year = ceil($minutes_read_year/60);
+//       $minutes_read_month = ceil($minutes_read_month/60);
+//       $minutes_read_week = ceil($minutes_read_week/60);
+
+       /*seperate to minutes and hours*/
+//            $minutes_read_year = 1000;
+//            $minutes_read_month = 10000;
+//            $minutes_read_week = 100;
+
+       $minutes_hour = floor($minutes_read_year / 60);
+       $minutes_min = $minutes_read_year - ($minutes_hour * 60);
+       $minutes_read_year = '';
+
+       if ($minutes_hour)
+       {
+            $minutes_read_year .= $minutes_hour.' <span>hrs</span> ';
+       }
+       $minutes_read_year .= $minutes_min.' <span>mins</span>';
+
+//            echo $minutes_read_year;
+//            die;
+
+       $minutes_hour = floor($minutes_read_month / 60);
+       $minutes_min = $minutes_read_month - ($minutes_hour * 60);
+       $minutes_read_month = '';
+
+
+       if ($minutes_hour)
+       {
+            $minutes_read_month .= $minutes_hour.' <span>hrs</span> ';
+       }
+       $minutes_read_month .= $minutes_min.' <span>mins</span>';
+
+
+       $minutes_hour = floor($minutes_read_week / 60);
+       $minutes_min = $minutes_read_week - ($minutes_hour * 60);
+       $minutes_read_week = '';
+
+
+       if ($minutes_hour)
+       {
+            $minutes_read_week .= $minutes_hour.' <span>hrs</span> ';
+       }
+       $minutes_read_week .= $minutes_min.' <span>mins</span>';
+
+       $count = count($data_array);
+       $select = $count;
+       
+       if ($count % 2 == 0) {
+            $select /= 2;
+       }
+       else {
+            $select -= 1;
+            $select /= 2;
+       }
+
+       $url = 'http://int.rrkidz.com/rrkidz/api/books/';
+
+       $ch = curl_init();
+       $timeout = 0; // set to zero for no timeout
+       curl_setopt ($ch, CURLOPT_URL, $url);
+       curl_setopt($ch,CURLOPT_HTTPHEADER,array('Accept: application/json'));
+       //curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+       curl_setopt($ch,CURLOPT_USERPWD,"rrkidz_server:ha9uTheyusu3");
+       curl_setopt ($ch, CURLOPT_RETURNTRANSFER, 1);
+       curl_setopt ($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
+
+       $file_contents = curl_exec($ch);
+       curl_close($ch);
+
+       $temp_arr = json_decode($file_contents,true);
+       $ind = 0;
+       //var_dump($data_array);
+
+       foreach ($temp_arr['books'] as $book=>$value)
+       {
+            for ($i=0; $i<$index; $i++)
+            {
+                 if ($data_array[$i]['bookID'] == $book){
+                      $cover_image[$ind] = $value['cover'];
+                      $ind++;
+                 }
+            }
+       }
+   }
+
+   global $base_path;
+
+
+   
+/*<script type="text/javascript" src="'.$base_path.'sites/all/themes/rrkidz/js/carousel_js/jquery.waterwheelCarousel.js" ></script>*/
+$js = '<script type="text/javascript" src="'.$base_path.'sites/all/themes/rrkidz/js/carousel_js/carousel.js" ></script>
+';
+
+
+   $output .= $js.'<div class="parent-main-dashboard-content">
+                   <div class="child-reading-desc">
+                           '.$prevChildLink.'<h1>'.$child_name.'\'s Reading Adventure</h1><img style="display:none" id="ajax-loader" src="'.$base_path.'sites/all/themes/rrkidz/images/ajax-loader.gif"/>'.$nextChildLink.'
+                           <div class="parents-reading-count">
+                           <div class="reading-div-border">
+                               <div class="read-div-bg">
+                                   <h4 id="books_read_val">'.$books_read_week.'</h4><span>Books Read</span>
+                               </div>
+                           </div>
+                               <select id="book_read" onchange="read_book_change('.$books_read_year.', '.$books_read_month.', '.$books_read_week.')">
+                                           <option>This Year</option>
+                                           <option>This Month</option>
+                                           <option Selected = "selected">This Week</option>
+                               </select>
+                           </div>
+
+                           <div class="parents-reading-count" style="margin-right:0">
+                           <div class="reading-div-border2">
+                               <div class="read-div-bg">
+                                   <h4 id="time_read_val">'.$minutes_read_month.'</h4><span>Total Time Spent Reading</span>
+                               </div>
+                           </div>
+                               <select id="time_read" onchange="time_book_change('."'$minutes_read_year'".', '."'$minutes_read_month'".', '."'$minutes_read_week'".')">
+                                           <option>This Year</option>
+                                           <option Selected = "selected">This Month</option>
+                                           <option>This Week</option>
+                               </select>
+                           </div>
+                           <div class="video-trips-div">
+                           <div class="video-trips-border">
+                               <div class="video-trips-bg">
+                                   <h4 class="video-trips">'.$video_trips_count.'</h4>
+                               </div>
+                           </div>
+                           <div class="video-trip-text">Video Field Trips</div>
+                           </div>
+                   </div>
+
+
+                   <div class="carousel-parent-dash">
+                         <h3 class="header">Recent Books Read</h3>
+                         <div id="carousel">
+                              <div id="waterwheel-carousel-higharch">
+                                   <div class="carousel-controls">
+                                        <div class="carousel-prev">
+                                             <a href="#"><img onclick="prev_detail_dash('.$ind.')" src="'.base_path().'sites/all/themes/rrkidz/images/carousel_images/arrow-left-dahboard.png"/></a>
+                                        </div>
+                                        <div class="carousel-next">
+                                             <a href="#"><img onclick="next_detail_dash('.$ind.')" src="'.base_path().'sites/all/themes/rrkidz/images/carousel_images/arrow-right-dahboard.png"/></a>
+                                        </div>
+                                   </div>
+                                   <div class="carousel-images">';
+//                                      for($i=0; $i<10; $i++)
+//                                      {
+//                                           $output .= '<img id="'.$i.'" src="'.$cover_image[$i].'" height=200 width=160 alt="Test Image" />';
+//
+//                                      }
+                                      
+                                      for($i=0; $i<$ind; $i++)
+                                      {
+                                           if ( ($i > ($select-4)) && ($i < ($select+4)) ){
+                                                $output .= '<img id="'.$i.'" class="'.$data_array[$i]['bookID'].'" src="'.base_path().'sites/all/themes/rrkidz/images/dynamic_carousel_images/' .$data_array[$i]['bookID'].'.jpg" height=200 width=160 alt="Image not found" />';
+                                           }
+                                           else {
+                                                $output .= '<img id="'.$i.'" class="'.$data_array[$i]['bookID'].'" src="'.base_path().'sites/all/themes/rrkidz/images/noImage.gif" height=200 width=160 alt="Image not found" />';
+                                           }
+                                      }
+                                      
+                       $output .=' </div>
+                              </div>
+                         </div>';
+
+//onclick="ShowMe('.$i.')"   image onclick of parent hint. currently disssabled it is in carousel images for hint
+//
+//
+//
+//   $count = count($books_id);
+//   $count = 0;
+//
+//   for($i=0; $i<$count; $i++)
+//   {
+//           $output .= '<div class="family-hint-book-'.$i.'" style="display:none">'.$desc[$i].'</div>';
+//   }
+
+                   //$current_child_id_encoded = base64_encode($current_child_id);
+                   $child_summary_link = $base_path."child/history?id=".$current_child_index;
+                   $output .='<div class="carousel-message">
+                                   <span style="display:none" class = "parent-dash-message">Click on the book above for "Family Reading Time" hints.</span>
+                                   <a href="'.$child_summary_link.'"><img style="" src="'.base_path().'sites/all/themes/rrkidz/images/complete-history-btn.png" /></a>
+                              </div>
+                        
+                              <div id="parent-dash-overall-popup">
+                                   <div id="parent-dash-main">
+                                        <div class="crossimage">
+                                             <img src="'.base_path().'sites/all/themes/rrkidz/images/1339063379_list-remove.png" onclick="CloseMe()"/>
+                                        </div>
+                                        <h2>Parent Hint</h2>
+                                        <div class="image-hint"></div>
+                                   </div>
+                              </div>
+               </div>';
+      return $output;
+}
+
+
+function get_child_data(){
+    echo _getBlockContents();
+}
+
+/*
+ * Child hostory Page that loades child data by calling another page
+ * @return : HTML
+ */
+function get_child_history(){ 
+     $output = '<div class="pub_dash_title">
+                   <h1 id="page-title" class="title">
+				  
+                   </h1>
+                   
+               </div>
+               <a id="summary_page_link" href=""><img style="" src="'.base_path().'sites/all/themes/rrkidz/images/complete-history-btn.png" /></a>
+               <div class="row-seprator"></div>
+               <div class="pub_dash_table" id="child-data-table">'.get_child_individual_history().'<img style="display:none" id="ajax-loader" src="'.base_path().'sites/all/themes/rrkidz/images/ajax-loader.gif"/></div>';
+
+     return $output;
+}
+
+
+function get_child_individual_history(){
+    return '<p> testnig goes on ... </p><a href="javascript:;" onClick="loadN(1)"> >>> </a><script>
+    function loadN(){
+        alert("bbbbccccc");
+        $.ajax({
+          url: "child/history/table?2",
+          success: function(data) {
+
+            alert("Load was performed.");
+          }
+        });
+    }
+</script>';
+}
+
+/*
+ * This function fetches reading history for any child by providing child id.
+ * @return : JSON 
+ */
+function get_child_history_table(){ 
+    global $base_path;
+    $child_id = $_SESSION["children_list"]["children"][($_GET["id"]-1)]["childId"];
+
+    $next_child_index = ($_GET["id"]+1);
+    $prev_child_index = ($_GET["id"]-1);
+    $total_children = count($_SESSION["children_list"]["children"]);
+    
+    if($next_child_index > count($_SESSION["children_list"]["children"])){
+       $next_child_index = "void";
+    }
+
+    if($prev_child_index < 1 ){
+        $prev_child_index = "void";
+    }
+    /********** Getting Books List (if not in session then from webservice) *********/
+    $rrkidz_books_arr = get_rrkidz_books_arr();
+    //echo "<pre>";
+    //print_r($rrkidz_books_arr);
+    //die();
+    /********** End of Getting Books List (if not in session then from webservice) **********/
+
+
+
+    /********** Getting Books Categories/Islands Mapping (if not in session then from webservice) *********/
+    $rrkidz_books_category_mapping_arr = get_rrkidz_books_category_mapping_arr();
+//    echo "<pre>";
+//    print_r($rrkidz_books_category_mapping_arr);
+//    die();
+    /********** End of Getting Books Categories/Islands Mapping (if not in session then from webservice) **********/
+
+
+
+    $json_responce = '';
+    $dataArr = array();
+    if(empty($_SESSION["Children_reading_adventure"][$child_id])){
+
+        //$url = 'http://int.rrkidz.com/rrkidz/api/child/'.$child_id.'/readingHistory?start=06-27-2012\&end=12-03-2012';
+        //$url = 'http://localhost/company-website/webservices/activities.php'; //Dummy Local testing service
+        $url = 'http://int.rrkidz.com/rrkidz/api/child/'.$child_id.'/readingHistory';
+        $ch = curl_init();
+        $timeout = 0; // set to zero for no timeout
+        curl_setopt ($ch, CURLOPT_URL, $url);
+        curl_setopt($ch,CURLOPT_HTTPHEADER,array('Accept: application/json'));
+        curl_setopt($ch,CURLOPT_USERPWD,"rrkidz_server:ha9uTheyusu3");
+        curl_setopt ($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt ($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
+        $file_contents = curl_exec($ch);
+        curl_close($ch);
+        //$json_responce = $file_contents;
+        $dataArr = json_decode($file_contents,true);
+
+        foreach($dataArr["activities"] as $ind => $activity){
+            $dataArr["activities"][$ind]["book_title"] = $rrkidz_books_arr["books"][$activity["book_id"]]["title"];
+            $dataArr["activities"][$ind]["author"] = $rrkidz_books_arr["books"][$activity["book_id"]]["author"];
+            $dataArr["activities"][$ind]["island"] = $rrkidz_books_category_mapping_arr[$activity["book_id"]];
+            $dataArr["activities"][$ind]["time_read"] = ceil($activity["time_read"]/60);
+            
+            $dateArr = explode("-", $activity["activity_date"]);
+
+            $newDateFormat = $dateArr[1]."/".$dateArr[2]."/".($dateArr[0]%2000);
+
+            $dataArr["activities"][$ind]["activity_date"] = $newDateFormat;
+        }
+//echo "eee<pre>";
+//print_r($dataArr);
+//die();
+        $_SESSION["Children_reading_adventure"][$child_id] = $dataArr;
+    }else{
+        $dataArr = $_SESSION["Children_reading_adventure"][$child_id];
+        //$json_responce = json_encode($_SESSION["Children_reading_adventure"][$child_id]);
+    }
+
+    $dataArr["next_child_index"] = $next_child_index;
+    $dataArr["prev_child_index"] = $prev_child_index;
+    $dataArr["total_children_count"] = $total_children;
+
+    $dataArr["current_child_index"] = (int)$_GET["id"];
+
+    $dataArr["summary_page_link"] =     $base_path."parents/dashboard?child=".(int)$_GET["id"];
+
+    $dataArr["chlid_name"] = $_SESSION['children_list']["children"][($_GET["id"]-1)]["childName"];
+//echo $_GET["id"]."<pre>";print_r($_SESSION['children_list']["children"]);die();
+    $json_responce = json_encode($dataArr);
+    
+    
+    print($json_responce);
+    die();
+
+}
+
+
+function get_rrkidz_books_arr(){
+    $rrkidz_books_arr = array();
+    if(empty($_SESSION["rrkidz_book_list"])){
+
+        $url = 'http://int.rrkidz.com/rrkidz/api/books/';
+        $ch = curl_init();
+        $timeout = 0; // set to zero for no timeout
+        curl_setopt ($ch, CURLOPT_URL, $url);
+        curl_setopt($ch,CURLOPT_HTTPHEADER,array('Accept: application/json'));
+        curl_setopt($ch,CURLOPT_USERPWD,"rrkidz_server:ha9uTheyusu3");
+        curl_setopt ($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt ($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
+        $file_contents = curl_exec($ch);
+        curl_close($ch);
+
+        $rrkidz_books_arr = json_decode($file_contents,true);
+        $_SESSION["rrkidz_book_list"] = $rrkidz_books_arr;
+        //echo "Webservice responce";
+
+    }else{
+        //echo "Session responce by function";
+        $rrkidz_books_arr = $_SESSION["rrkidz_book_list"];
+    }
+    return $rrkidz_books_arr;
+}
+
+
+function get_rrkidz_books_category_mapping_arr(){
+    $book_island_mapp_arr = array();
+    if(empty($_SESSION["rrkidz_books_category_mapping"])){
+
+        $url = 'http://api.rrkidz.com/rrkidz/api/books/recommended/';
+        $url = 'http://localhost/company-website/webservices/island_mapping.php'; //Dummy Local testing service
+        $ch = curl_init();
+        $timeout = 0; // set to zero for no timeout
+        curl_setopt ($ch, CURLOPT_URL, $url);
+        curl_setopt($ch,CURLOPT_HTTPHEADER,array('Accept: application/json'));
+        curl_setopt($ch,CURLOPT_USERPWD,"admin:prUPreC5U6at");
+        curl_setopt ($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt ($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
+        $file_contents = curl_exec($ch);
+        //var_dump(($file_contents));
+        curl_close($ch);
+
+        $rrkidz_books_category_mapping_arr = json_decode($file_contents,true);
+        $book_island_mapp_arr = array();
+        foreach($rrkidz_books_category_mapping_arr["islands"] as $island){
+            foreach($island["categoryBooks"] as $book){
+                $book_island_mapp_arr[$book] = $island["name"] ;
+            }
+        }
+
+        $_SESSION["rrkidz_books_category_mapping"] = $book_island_mapp_arr;
+        //echo "Webservice responce";
+
+    }else{
+       // echo "Session responce";
+        $book_island_mapp_arr = $_SESSION["rrkidz_books_category_mapping"];
+    }
+
+//    echo "<pre>";
+//    print_r($book_island_mapp_arr);
+//    die();
+    return $book_island_mapp_arr;
+}

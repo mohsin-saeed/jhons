@@ -1,0 +1,509 @@
+<?php
+
+function rrkidz_publisher_dashboard_menu(){
+  $menus = array();
+
+  $menus['publisher_dashboard'] = array(
+    'title' => t("page"),
+    'page callback' => 'rrkidz_publisher_dashboard_block',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+
+  $menus['send_publisher_email_report'] = array(
+    'title' => t("page"),
+    'page callback' => 'send_publisher_email_report',
+    'access callback' => TRUE
+  );
+
+  $menus['get_data_of_publisher'] = array(
+    'title' => t("page"),
+    'page callback' => 'get_data_of_publisher',
+    'access arguments' => array('access content')
+  );
+  
+  return $menus;
+}
+
+function rrkidz_publisher_dashboard_block($op='list', $delta=0){
+
+  if ($op == "list")
+  {
+    $block = array();
+    $block[0]["info"] = t('RRkids publisher dashboard');
+    return $block;
+  }
+  else if ($op == 'view') {
+	$block_content = rrkidz_publisher_dashboard_content();
+	$block['content'] = $block_content;
+	return $block;
+  }
+}
+
+function rrkidz_publisher_dashboard_content(){
+
+     global $user;
+     
+     $data = $user->data;
+     $complete_data = unserialize($data);
+
+     if(empty($_SESSION["publisher_name"])){
+         $publishers = _get_publishers();
+         $_SESSION["publisher_name"] = $publishers[$complete_data["publisher_id"]];
+     }
+     
+     $publisher['id'] = $complete_data['publisher_id'];
+     $publisher['name'] = $_SESSION["publisher_name"];
+     $publisher['email'] = $user->mail;
+
+     if (!($user->uid) || (in_array("anonymous user", $user->roles))){
+          drupal_set_message('*You donot have permission to view this page', 'error');
+          drupal_goto('');
+     }
+
+     if($publisher['id'] == null){
+          drupal_set_message('*Sign-in as publisher to view this page', 'error');
+          echo '<script>window.top.location.href="'.base_path().'"</script>';
+          exit;
+     }
+
+     $url = 'http://api.rrkidz.com/rrkidz/api/publishers/'.$publisher['id'].'/books/by_author/';
+//     $url = 'http://int.rrkidz.com/rrkidz/api/publishers/100/books/by_author/';
+//     echo $url;
+
+     $ch = curl_init();
+     $timeout = 0;
+     
+     curl_setopt ($ch, CURLOPT_URL, $url);
+     curl_setopt($ch,CURLOPT_HTTPHEADER,array('Content-type:application/json', 'Accept: application/json'));
+     curl_setopt($ch,CURLOPT_USERPWD,"rrkidz_server:ha9uTheyusu3");
+     curl_setopt ($ch, CURLOPT_RETURNTRANSFER, 1);
+     curl_setopt ($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
+     $file_contents = curl_exec($ch);
+     curl_close($ch);
+     $val = json_decode($file_contents,true);
+
+//     echo '<pre>';
+//     print_r($val);
+//     echo '</pre>';
+//     die;
+
+     $index=0;
+     
+     foreach($val['authors'] as $key => $value)
+     {
+          if ($key != '')
+          {
+               $author[$index] = $key;
+               for($index_books=0; !is_null($value[$index_books]); $index_books++){
+                    $book_data[$index][$index_books]['id'] = $value[$index_books]['ID'];
+                    $book_data[$index][$index_books]['title'] = $value[$index_books]['title'];
+               }
+
+               $index++;
+          }
+     }
+
+     $output = '<div class="pub_dash_title">
+                   <h1 id="page-title" class="title">
+				  '.$publisher['name'].' </h1>
+               </div>
+
+               <div class="hidden_fields">
+                    <select class="pub_dash_title_dropdown_hidden">
+                              <option>--ALL--</option>';
+                              $book_index = 0;
+                              for ($i=0;!is_null($author[$i]); $i++)
+                              {
+                                   for ($j=0; $book_data[$i][$j]; $j++)
+                                   {
+                                        if ($author[$i] != ''){
+                                             $output .= '<option name='.$book_data[$i][$j]['id'].' class='.$book_index.' index="pub_dash_books" id='.$i.'>'.$book_data[$i][$j]['title'].'</option>';
+                                             $book_index++;
+                                        }
+                                   }
+                              }
+                    $output .= '</select>
+                    
+                    <label class="pub_start_date_hidden"></label>
+                    <label class="pub_end_date_hidden"></label>
+                    <label class="pub_author_name_hidden"></label>
+                    <label class="pub_book_id_hidden"></label>
+               </div>
+
+               <form class="jqtransform publisher-form">
+               
+               <div class="pub_author_book">
+			   		
+					
+                    <div class="pub_dash_book">
+                         <select class="pub_dash_title_dropdown">
+                              <option value="default" selected>-- ALL Books --</option>';
+                              for ($i=0; !is_null($author[$i]); $i++)
+                              {
+                                   for ($j=0; $book_data[$i][$j]; $j++)
+                                   {
+                                        if ($author[$i] != ''){
+                                             $output .= '<option class="pub_dash_books" id='.$i.' onClick=BookChangeUpdateTable('.$i.','."$j".')>'.$book_data[$i][$j]['title'].'</option>';
+                                        }
+                                   }
+                              }
+                         $output .= '</select><span class="publisher_dropdowns">Books</span>
+
+                    </div>
+					
+					<div class="pub_dash_author">
+						 <select class="pub_dash_author_dropdown">
+                              <option id=all onClick=changeBookDropDown("all")>-- ALL Authors --</option>';
+                              for ($i=0; !is_null($author[$i]); $i++)
+                              {
+                                   if ($author[$i] != '')
+                                        $output .= '<option id='.$i.' onClick=changeBookDropDown('.$i.')>'.$author[$i].'</option>';
+                              }
+                         
+            	         $output .= '</select><span class="publisher_dropdowns">Authors</span>
+                              
+                   
+                    </div>
+                    
+               </div>
+               </form>
+               <div class="dates-email-wrap clearfix">
+               <div class="select-dates">
+                    <form class="jqtransform">
+                    <div class="pub_dash_date_dropdown">
+                         <select>
+                                   <option onClick=DateOptionSelected(0)>Last Seven Days</option>
+                                   <option onClick=DateOptionSelected(1)>Last 30 Days</option>
+                                   <option onClick=DateOptionSelected(2)>Date Range</option>
+                         </select>
+
+                    </div>
+                    </form>
+
+                    <div class="pub_date_picker">
+                         <input type="text" id="start-datepicker" value="Start Date" /> <input type="text" id="end-datepicker" value="End Date" />
+                    </div>
+                    <label class="date_error_msg"></label>
+			 
+			   </div>
+			    <div class="pub_dash_email_dropdown">
+				<form class="jqtransform">
+                    <div class="publisher_email_message"><img class="publisher_email_message_img" src="'.base_path().drupal_get_path("theme", "rrkidz").'/images/ajax-loader.gif" style="display:none" ><label class="publisher_email_message_msg" style="display:none">Report Sent to your e-mail address</label></div>
+                    <select class="slect-email">
+                         <option selected="selected">--Email this report--</option>
+                         <option onClick=MailMePDF("'.$publisher['email'].'") >Email PDF Version</option>
+                         <option onClick=MailMeCSV("'.$publisher['email'].'") >Email CSV Version</option>
+                    </select>
+					 </form>
+               </div>
+			   </div>
+               <div class="row-seprator">
+               </div>
+               
+               <div class="pub_dash_table">
+                    <iframe class="pub_table" id="pub_table" name="iframe" width="930" height="750" src="'.base_path().'publishers/table"></iframe>
+               </div>';
+     
+     return $output;
+}
+
+function send_publisher_email_report(){
+
+     $file_type = $_GET['type'];
+     $start_date = $_GET['start_date'];
+     $end_date = $_GET['end_date'];
+     $author = $_GET['author'];
+     $book = $_GET['book'];
+
+     $publisher_name = $_SESSION["publisher_name"];
+
+     global $user;
+
+     $sender = "info@rrkidz.com";
+     $recipient = $user->mail;
+     $subject = "Your Book Download Report";
+     $body = "Attached please find the Book Download Report you requested.<br><br><br><br>
+          Regards,<br>
+          The Team at RRKidz";
+
+     $attachments = array();
+
+     if ($file_type == 'csv')
+     {
+          $file_path = generate_csv($start_date, $end_date, $author, $book);
+          $file_content = file_get_contents($file_path);
+          
+          $attachments[]=array(
+              //'filepath' => $file_path,
+              'filecontent' => $file_content,
+              'filename' => 'Publisher Report.csv',
+              'filemime' => 'text/csv'
+              );
+     }
+     else{
+          $file_path = generate_pdf($start_date, $end_date, $author, $book);
+          $file_content = file_get_contents($file_path);
+          $attachments[]=array(
+              //'filepath' => $file_path,
+              'filecontent' => $file_content,
+              'filename' => 'Publisher Report.pdf',
+              'filemime' => 'application/pdf'
+              );
+     }
+     
+     $mail = mimemail($sender, $recipient, $subject, $body, $plaintext = NULL, $headers = array(), $text = NULL, $attachments);
+
+     echo 'success';
+     die();
+     
+}
+
+function generate_csv($start_date, $end_date, $author, $book){
+
+     global $user;
+     $start_date = $start_date;
+
+     $filename =  'sites/default/files/publisher_files/'.$user->uid.'.csv';
+     $fp = fopen($filename, 'w');
+
+     $publisher_name = $_SESSION["publisher_name"];
+     $report_title = array('',$publisher_name.' Book Download Report','');
+     fputcsv($fp, $report_title);
+     
+     fputcsv($fp, array('','',''));
+     $report_data = array('Start Date',$start_date,'');
+     fputcsv($fp, $report_data);     
+     fputcsv($fp, array('','',''));
+     $report_data = array('End Date',$end_date,'');
+     fputcsv($fp, $report_data);
+
+     if ($author != 'none'){
+          fputcsv($fp, array('','',''));
+          $report_data = array('Author selected',$author,'');
+          fputcsv($fp, $report_data);
+     }
+
+     if ($book != 'none'){          
+          fputcsv($fp, array('','',''));
+          $report_data = array('Book selected',$book,'');
+          fputcsv($fp, $report_data);
+     }
+     
+     fputcsv($fp, array('','',''));
+     
+     $header = array('BOOK TITLE','AUTHOR','UNIQUE DOWNLOADS');
+     fputcsv($fp, $header);
+
+     $total_downloads = 0;
+     $data_list = get_publisher_data_from_file();
+
+     foreach ($data_list as $fields) {
+          
+          $temp_array[1] = $fields[0];
+          $temp_array[2] = $fields[1];
+          $temp_array[3] = $fields[2];
+          fputcsv($fp, $temp_array);
+          $total_downloads += $fields[2];
+     }
+     
+     fputcsv($fp, array('','',''));
+     fputcsv($fp, array('','Total unique downloads',$total_downloads));
+
+     fclose($fp);
+     return $filename;
+}
+
+function generate_pdf($start_date, $end_date, $author, $book){
+
+     global $user;
+     $filename =  'sites/default/files/publisher_files/'.$user->uid.'.pdf';
+     $content = pdf_report($start_date, $end_date, $author, $book);
+     $html2pdf = null;
+
+     require_once('html2pdf/html2pdf.class.php');
+     try{
+          $html2pdf = new HTML2PDF('P', 'A4', 'fr');
+          $html2pdf->writeHTML($content);
+          $html2pdf->Output($filename, 'F');
+     }
+     catch(HTML2PDF_exception $e) {
+          
+          $html2pdf = null;
+          //echo '$e';
+          //exit;
+     }
+     
+     return $filename;
+}
+
+function get_publisher_data_from_file(){
+
+     global $user;
+     $filename_txt = 'sites/default/files/publisher_files/'.$user->uid.'.txt';
+     $fdata = fopen($filename_txt, 'r');
+     $string_data = fread($fdata, filesize($filename_txt));
+
+     $index=0;
+     $full_str_row = '';
+     $data_list = null;
+
+     for($i=0; $i < strlen($string_data); $i++){
+          $temp_data = substr($string_data, $i, 1);
+          if (($temp_data == ':')&&(substr($string_data, $i, 3) == ':n:')){
+               $data_list[$index] = $full_str_row;
+               $data_list[$index] = explode("|", $data_list[$index]);
+               $full_str_row = "";
+               $index++;
+               $i += 2;
+          }
+          else{
+               $full_str_row .= $temp_data;
+          }
+     }
+
+     return $data_list;
+}
+
+function get_data_of_publisher(){
+
+     global $user;
+     $data = $user->data;
+     $complete_data = unserialize($data);
+
+     $publisher['id'] = $complete_data['publisher_id'];
+
+     if (is_null($publisher['id'])){
+         drupal_json('not authorized');
+     }
+
+     $author = $_REQUEST['author'];
+     $book = $_REQUEST['book'];
+     $start_date = $_REQUEST['start_date'];
+     $end_date = $_REQUEST['end_date'];
+
+     $start_date = str_replace('/', '-', $start_date);
+     $end_date = str_replace('/', '-', $end_date);
+
+     $url = 'http://api.rrkidz.com/rrkidz/api/publishers/'.$publisher['id'].'/book_downloads/?';
+
+     if ($book != 'all'){
+          $url .= 'bookId='.$book.'&';
+     }
+     else{
+          if ($author != 'all'){
+               $author = urlencode($author);
+               $url .= 'author='.$author.'&';
+          }
+     }
+
+     $url .= 'startDate='.$start_date.'&endDate='.$end_date;
+     $ch = curl_init();
+     $timeout = 0;
+     curl_setopt ($ch, CURLOPT_URL, $url);
+     curl_setopt($ch,CURLOPT_HTTPHEADER,array('Accept: application/json'));
+     curl_setopt($ch,CURLOPT_USERPWD,"rrkidz_server:ha9uTheyusu3");
+     curl_setopt ($ch, CURLOPT_RETURNTRANSFER, 1);
+     curl_setopt ($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
+     $file_contents = curl_exec($ch);
+     curl_close($ch);
+     $val = json_decode($file_contents,true);
+
+     if ($val['status'] == false)
+     {
+          //drupal_json('no result get from webservice');
+          $data_list[0] = array('', '', '', '');
+     }
+     else{
+          for($i=0; !is_null($val['downloads'][$i]); $i++){
+
+               $data_list[$i] = array($val['downloads'][$i]['bookTitle'], $val['downloads'][$i]['bookAuthor'], $val['downloads'][$i]['downloads']);
+          }
+     }
+     
+     $filename =  'sites/default/files/publisher_files/'.$user->uid.'.txt';
+
+     $data_list_inString = '';
+     for ($i=0; $data_list[$i] != null; $i++)
+     {
+          $data_list_inString .= implode("|", $data_list[$i]);
+          $data_list_inString .= ':n:';
+     }
+     
+     file_delete($filename);
+     file_put_contents($filename, $data_list_inString);
+     
+     echo json_encode($data_list);
+     die();
+}
+
+function pdf_report($start_date, $end_date, $author, $book){
+
+     $data_list = get_publisher_data_from_file();
+     $total_downloads=0;
+
+     $content = '<html>
+                  <head></head>
+                  
+                  <body>
+                    <h1>'.$_SESSION["publisher_name"].' Book Download Report</h1>
+                    <h3>Start Date: </h3>'.$start_date.'<br>
+                    <h3>End Date: </h3>'.$end_date.'<br>';
+                    if ($author != 'none'){
+                         $content .= '<h3>Author selected: </h3>'.$author.'<br>';
+                    }
+                    if ($book != 'none'){
+                         $content .= '<h3>book selected: </h3>'.$book.'<br>';
+                    }
+                    
+                    $content .= '<br><table>
+                         <tr>
+                              <th>BOOK TITLE</th>
+                              <th>AUTHOR</th>
+                              <th>UNIQUE DOWNLOADS</th>
+                         </tr>';
+
+                         for ($i=0; $data_list[$i] != null; $i++){
+                              $content .= '<tr><td>'.$data_list[$i][0].'</td>';
+                              $content .= '<td>'.$data_list[$i][1].'</td>';
+                              $content .= '<td>'.$data_list[$i][2].'</td></tr>';
+                              $total_downloads += $data_list[$i][2];
+                         }
+                         $content .= '</table>
+
+                         <br><div><label>total unique downloads: '.$total_downloads.'</label></div>
+                  <body>
+             </html>';
+
+                         return $content;
+
+
+     /*return '<html>
+                  <head>
+                  
+                  <link rel="stylesheet" href="<?php echo base_path()?>sites/all/themes/rrkidz/js/dojo/dijit/themes/claro/claro.css"/>
+                  <link rel="stylesheet" href="<?php echo base_path()?>sites/all/themes/rrkidz/js/dojo/dojo/resources/dojo.css"/>
+                  <link rel="stylesheet" href="<?php echo base_path()?>sites/all/themes/rrkidz/js/dojo/dijit/themes/claro/claro.css"/>
+                  <link rel="stylesheet" href="<?php echo base_path()?>sites/all/themes/rrkidz/js/dojo/dojox/grid/enhanced/resources/claro/EnhancedGrid.css"/>
+                  <link rel="stylesheet" href="<?php echo base_path()?>sites/all/themes/rrkidz/js/dojo/dojox/grid/enhanced/resources/EnhancedGrid_rtl.css"/>
+
+                  <style type="text/css">
+                         #grid {width:928px !important; height:600px !important;}
+                  </style>
+                  <script>
+                         dojoConfig = {parseOnLoad: true}
+                  </script>
+
+                  <script src="<?php echo base_path()?>sites/all/themes/rrkidz/js/dojo/dojo/dojo.js"></script>
+                  <script src="<?php echo base_path()?>sites/all/themes/rrkidz/js/dojo/dojo_data1.js"></script>
+                  <script type="text/javascript"  src="<?php echo base_path()?>sites/all/themes/rrkidz/js/JQuery-complete.js"></script>
+
+                  </head>
+
+
+                  <body>
+                    <h1>RRkidz Publisher Report</h1>
+                    <div id="MygridDiv"></div>
+                  <body>
+             </html>';*/
+}

@@ -1,0 +1,5 @@
+name = RRKidz Parent Dashboard
+description = Parent main dashboard view module
+version = "7.x"
+core = "7.x"
+package = RRKidz parent dash

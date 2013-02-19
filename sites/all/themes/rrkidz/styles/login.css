@@ -1,0 +1,52 @@
+#login-popup
+{
+
+width:100%;
+height:auto;
+position:absolute;
+float:left;
+text-align:center;
+
+}
+
+.opacity
+{
+
+opacity:0.45;
+position: absolute;
+width: 100%;
+z-index:999;
+display:none;
+background-color:#000;
+
+}
+
+.crossme {
+    cursor:pointer;
+    top:-25px !important;
+    position:absolute;
+    left:915px !important;
+}
+
+body {
+	background-attachment: fixed;
+}
+
+#login-main {
+    visibility:hidden;
+    padding:20px;
+    left:-2%;
+    border:2px solid #666;
+    position:absolute;
+    width:900px;
+    height: 590px;
+    background:white;
+    z-index:99;
+    margin:auto;
+    z-index:3500;
+    top: -130px;
+}
+
+
+
+
